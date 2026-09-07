@@ -1,0 +1,21 @@
+# Pinned to the versions currently in .venv (Python 3.12).
+#
+# torch: on Windows and Linux x86_64 the default PyPI wheel is the CUDA build.
+# For a CPU-only box:
+#   pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+# The repo Dockerfile skips this line and uses the torch from its PyTorch base
+# image instead (see the Docker section in the README).
+
+numpy==1.26.4
+torch==2.13.0
+pydantic==2.13.5
+wandb==0.29.0
+
+# RLGym v2 + RocketSim + the rlgym-learn PPO stack
+rlgym==2.0.1
+rlgym-api==2.0.0
+rlgym-rocket-league==2.0.1
+rlgym-learn==2.0.0
+rlgym-learn-algos==0.4.0
+rlviser-py==0.6.13
+rocketsim==2.2.1
