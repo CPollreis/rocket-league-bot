@@ -52,6 +52,14 @@ Rendering is undocumented upstream, so here is the whole picture.
 your `PATH` first, then in the working directory. If you see
 `Failed to launch RLViser`, put the binary in the repo root.
 
+The binary and `rlviser-py` must agree on the UDP wire format. `requirements.txt`
+pins `rlviser-py==0.6.13`, which matches `rlviser` **v0.8.2**. A newer viewer
+(v0.9.x) changed the protocol and makes `rlviser-py` panic with a nonsense
+`memory allocation of 72057594037927944 bytes failed`. On a minimal Linux /
+WSL2 the viewer also needs `libxkbcommon-x11-0` (panics with `Library
+libxkbcommon-x11.so could not be loaded` without it), and sometimes
+`libvulkan1` / `mesa-vulkan-drivers` / `libgl1-mesa-dri`.
+
 RLViser draws the arena and car models from an `assets/` folder it builds from a
 Rocket League installation. Without one it renders a bare scene: the ball, the
 boost pads, and box-shaped cars.
