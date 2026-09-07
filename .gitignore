@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+
+# local copy of the rlviser viewer binary, for RL_RENDER=1 (see README)
+rlviser
+rlviser.exe
+
+# rlviser writes its own settings file into the working directory
+settings.txt
+
+# regenerated from the script on every run (force_overwrite=True)
+config.json
+
+# rlgym-learn shared-memory scratch dir (flinks_folder in config.json)
+shmem_flinks/
+
+# wandb: keep the folder tracked, ignore all run data and logs
+wandb/*
+!wandb/.gitkeep
+
+# checkpoints: keep the folder tracked, ignore all generated runs / logs / weights
+agent_controller_checkpoints/*
+!agent_controller_checkpoints/.gitkeep
+
+# smoke tests
+smoke_test*
+*_smoke_test*
+smoke-test*
+*_smoke_test.py
+**/smoke_test/

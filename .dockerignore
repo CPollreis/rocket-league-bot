@@ -1,0 +1,12 @@
+.git/
+.venv/
+wandb/
+agent_controller_checkpoints/
+__pycache__/
+**/__pycache__/
+*.pyc
+config.json
+settings.txt
+*smoke_test*
+rlviser
+rlviser.exe
