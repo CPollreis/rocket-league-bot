@@ -8,27 +8,105 @@ environment, and [`rlgym-learn`](https://github.com/JPK314/rlgym-learn) +
 Background and rationale for the choices below live in
 [design_choices.md](design_choices.md).
 
+> **Linux only.** `rlgym-learn` 2.0.0's Rust env-process backend does not run on
+> native Windows — it dies at startup with `FileExistsError: entity already
+> exists` (details [below](#why-not-native-windows)). On Windows, run it inside
+> **WSL2**; the setup is in [Windows (WSL2)](#windows-wsl2).
+
 ## Requirements
 
+- Linux x86_64 (native, or **WSL2** on Windows — see below)
 - Python 3.12
-- Windows or Linux, x86_64
 - An NVIDIA GPU (CUDA) for training. CPU works but the gradient step is slower.
+
+## Windows (WSL2)
+
+Native Windows is not supported (see [Why not native Windows](#why-not-native-windows)).
+Run everything from a WSL2 Ubuntu shell instead. One-time setup:
+
+1. **Install WSL2.** In an **elevated** PowerShell (Run as administrator):
+
+   ```powershell
+   wsl --install
+   ```
+
+   This enables the WSL2 + Virtual Machine Platform features and installs Ubuntu.
+   **Reboot** when prompted. On the next boot Ubuntu opens and asks you to create
+   a UNIX username and password. (If WSL was already partly installed, run
+   `wsl --install -d Ubuntu-24.04` then `wsl --update`.)
+
+2. **Confirm it's WSL version 2.** Back in PowerShell:
+
+   ```powershell
+   wsl -l -v          # the VERSION column must say 2
+   ```
+
+3. **Check CUDA reaches the VM.** The Windows NVIDIA driver exposes the GPU to
+   WSL2 automatically — do **not** install an NVIDIA driver inside Ubuntu (it
+   breaks the passthrough). From the Ubuntu shell:
+
+   ```sh
+   nvidia-smi         # should list your GPU
+   ```
+
+4. **Install build prerequisites** in Ubuntu:
+
+   ```sh
+   sudo apt update && sudo apt install -y git python3.12-venv build-essential
+   ```
+
+5. **Clone the repo into the Linux filesystem** — under `~`, *not*
+   `/mnt/c/...`. RocketSim hammers the disk and the `/mnt/c` Windows bridge is
+   an order of magnitude slower.
+
+   ```sh
+   cd ~
+   git clone <your-repo-url> rocket-league-bot
+   cd rocket-league-bot
+   ```
+
+Then follow [Setup](#setup) in that same Ubuntu shell.
+
+### Why not native Windows
+
+`rlgym-learn` 2.0.0 spins up its env processes through a Rust backend that uses
+[`mio`](https://github.com/tokio-rs/mio) for socket multiplexing. It registers
+each env's parent UDP socket with a short-lived handshake `mio::Poll`, then
+re-registers that same socket with the main multiplexer `Poll` **without
+deregistering it first**. `mio`'s Windows (IOCP) backend rejects a double
+registration:
+
+```rust
+// mio/src/sys/windows/mod.rs
+if self.inner.is_some() {
+    Err(io::ErrorKind::AlreadyExists.into())
+}
+```
+
+which surfaces in Python as:
+
+```
+FileExistsError: entity already exists
+```
+
+`mio`'s Linux (epoll) backend has no such guard, so the same code path works
+there. This is independent of Python version, CUDA, and the `shmem_flinks`
+directory. There is no released fix (`2.0.0` is the latest and matches `main`),
+so WSL2 is the path on Windows.
 
 ## Setup
 
+Run these on Linux (a WSL2 Ubuntu shell counts):
+
 ```sh
 python3.12 -m venv .venv
-# Linux:   source .venv/bin/activate
-# Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-On Windows and Linux x86_64 the `torch==2.13.0` pin resolves to a CUDA wheel.
-For a CPU-only box:
-
-```sh
-pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-```
+The `torch==2.13.0+cu126` pin in `requirements.txt` pulls the CUDA 12.6 build
+from the PyTorch download channel (via the `--extra-index-url` line in that
+file), so an NVIDIA GPU with a driver new enough for CUDA 12.6 is required.
 
 The training device is auto-detected: **CUDA** (`cuda:0`) if
 `torch.cuda.is_available()`, otherwise **CPU**. Override with `RL_DEVICE` (see
@@ -68,14 +146,16 @@ For the window to appear:
 
 - **A local display.** Not over SSH; from inside a container only via the
   host-viewer workaround in
-  [Watching a containerized run](#watching-a-containerized-run).
-- **The `rlviser` binary present.** Download `rlviser.exe` (Windows) or `rlviser`
-  (Linux) from the
+  [Watching a containerized run](#watching-a-containerized-run). Under **WSL2**
+  the window goes through WSLg — it works out of the box on Windows 11 and
+  recent Windows 10; if nothing appears, run `wsl --update` and confirm
+  `echo $DISPLAY` is non-empty in the Ubuntu shell.
+- **The `rlviser` binary present.** Download the **Linux** `rlviser` build (this
+  includes WSL2) from the
   [RLViser releases](https://github.com/VirxEC/rlviser/releases) and put it on
   `PATH` or in the repo root. `rlviser-py` launches it on the first render call.
   If you see `Failed to launch RLViser (./rlviser)` it is not finding it; the
-  repo root is the most reliable place. A repo-root `rlviser` / `rlviser.exe` is
-  git-ignored.
+  repo root is the most reliable place. A repo-root `rlviser` is git-ignored.
 - **A training device that does not crash.** CPU or CUDA. See
   [`RL_DEVICE`](#rl_device-where-the-gradient-step-runs).
 

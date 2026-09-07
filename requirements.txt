@@ -1,13 +1,14 @@
 # Pinned to the versions currently in .venv (Python 3.12).
 #
-# torch: on Windows and Linux x86_64 the default PyPI wheel is the CUDA build.
-# For a CPU-only box:
-#   pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
-# The repo Dockerfile skips this line and uses the torch from its PyTorch base
-# image instead (see the Docker section in the README).
+# torch: the CUDA 12.6 build is pulled from the PyTorch download channel via the
+# --extra-index-url line below. The repo Dockerfile strips the torch== line and
+# uses the torch from its PyTorch base image instead (see the Docker section in
+# the README).
+
+--extra-index-url https://download.pytorch.org/whl/cu126
 
 numpy==1.26.4
-torch==2.13.0
+torch==2.13.0+cu126
 pydantic==2.13.5
 wandb==0.29.0
 
