@@ -150,12 +150,38 @@ For the window to appear:
   the window goes through WSLg — it works out of the box on Windows 11 and
   recent Windows 10; if nothing appears, run `wsl --update` and confirm
   `echo $DISPLAY` is non-empty in the Ubuntu shell.
-- **The `rlviser` binary present.** Download the **Linux** `rlviser` build (this
-  includes WSL2) from the
-  [RLViser releases](https://github.com/VirxEC/rlviser/releases) and put it on
-  `PATH` or in the repo root. `rlviser-py` launches it on the first render call.
-  If you see `Failed to launch RLViser (./rlviser)` it is not finding it; the
-  repo root is the most reliable place. A repo-root `rlviser` is git-ignored.
+
+- **The `rlviser` window's system libraries.** `rlviser` is a Bevy app; a
+  minimal Ubuntu (including a fresh WSL2 install) is missing at least
+  `libxkbcommon-x11-0`, without which it panics at startup with `Library
+  libxkbcommon-x11.so could not be loaded` before any window opens:
+
+  ```sh
+  sudo apt install -y libxkbcommon-x11-0
+  ```
+
+  Test the viewer on its own — `./rlviser` from the repo root should open a
+  window (a bare scene, since nothing is feeding it yet); `Ctrl+C` to close.
+  If that still panics on a different `lib*.so`, add the usual Vulkan/GL set:
+  `sudo apt install -y libvulkan1 mesa-vulkan-drivers libgl1-mesa-dri libegl1`.
+
+- **The `rlviser` binary present, and matching `rlviser-py`.** The viewer's UDP
+  protocol changed after **v0.8.2**; `requirements.txt` pins
+  `rlviser-py==0.6.13` (released the same day as `rlviser` v0.8.2). A newer
+  viewer (v0.9.x) makes `rlviser-py` panic with `memory allocation of
+  72057594037927944 bytes failed`. Get the v0.8.2 Linux build (this includes
+  WSL2) and put it on `PATH` or in the repo root:
+
+  ```sh
+  curl -L -o rlviser https://github.com/VirxEC/rlviser/releases/download/v0.8.2/rlviser
+  chmod +x rlviser
+  ```
+
+  `rlviser-py` launches it on the first render call. `Failed to launch RLViser
+  (./rlviser)` means it is not finding it; the repo root is the most reliable
+  place. A repo-root `rlviser` is git-ignored. Newer builds and other platforms
+  are on the [RLViser releases](https://github.com/VirxEC/rlviser/releases) page
+  (the v0.9.x Linux asset is `rlviser-x86_64-unknown-linux-gnu`, not `rlviser`).
 - **A training device that does not crash.** CPU or CUDA. See
   [`RL_DEVICE`](#rl_device-where-the-gradient-step-runs).
 
