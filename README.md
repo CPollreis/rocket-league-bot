@@ -1,4 +1,6 @@
-# rocket-league-bot
+# PILOT
+
+**P**roximal-**I**teration **L**earning **O**ver **T**ime
 
 Reinforcement learning bot for Rocket League. Uses [RLGym v2](https://rlgym.org/)
 with the [RocketSim](https://github.com/ZealanL/RocketSim) engine for the
