@@ -61,7 +61,7 @@ Run everything from a WSL2 Ubuntu shell instead. One-time setup:
 
    ```sh
    cd ~
-   git clone <your-repo-url> rocket-league-bot
+   git clone https://github.com/CPollreis/rocket-league-bot.git
    cd rocket-league-bot
    ```
 
