@@ -114,7 +114,12 @@ def env_create_function() -> RLGym[
         termination_cond=termination_condition,
         truncation_cond=truncation_condition,
         transition_engine=RocketSimEngine(),
-        renderer=RLViserRenderer(),
+        # tick_rate is the frame rate rlviser plays the stream back at; keep it
+        # equal to the rate we feed frames (RL_RENDER_FPS) so playback timing is
+        # right. Only used when process_config.render is True.
+        renderer=RLViserRenderer(
+            tick_rate=float(os.environ.get("RL_RENDER_FPS", "60"))
+        ),
     )
 
 
@@ -221,8 +226,24 @@ if __name__ == "__main__":
     # Set RL_RENDER=1 to watch env process 0 in the RLViser window (needs a
     # local display; not over SSH or inside Docker).
     render = os.environ.get("RL_RENDER", "0") == "1"
-    # ~real-time playback: one env step advances tick_skip (8) / 120 s of game time.
-    render_delay = 8 / 120 if render else None
+    # RL_RENDER_FPS: frames/sec streamed to rlviser (default 60). One env step
+    # advances tick_skip (8) / 120 s of game time, so playback runs at
+    # RL_RENDER_FPS / 15 x real time (15 -> real time, 60 -> 4x). Higher looks
+    # smoother but only up to what env process 0 can produce, so watch with
+    # RL_N_PROC=1. rlviser interpolates between frames, so a steady feed matters
+    # more than a high number.
+    render_fps = float(os.environ.get("RL_RENDER_FPS", "60"))
+    render_delay = (1.0 / render_fps) if render else None
+    if render:
+        print(
+            f"[speed_test] rendering env 0 at up to {render_fps:g} fps "
+            f"(~{render_fps / 15:.1f}x real time); RL_RENDER_FPS=15 for real time"
+        )
+        if n_proc > 2:
+            print(
+                f"[speed_test] RL_N_PROC={n_proc}: playback will be smoother "
+                f"with RL_N_PROC=1 while watching"
+            )
 
     if use_wandb:
         metrics_logger = WandbMetricsLogger(
