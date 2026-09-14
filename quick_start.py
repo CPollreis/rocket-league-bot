@@ -99,7 +99,12 @@ def build_rlgym_v2_env():
         termination_cond=termination_condition,
         truncation_cond=truncation_condition,
         transition_engine=RocketSimEngine(),
-        renderer=RLViserRenderer(),  # only used when process_config.render is True
+        # tick_rate is the frame rate rlviser plays the stream back at; keep it
+        # equal to the rate quick_start feeds frames (RL_RENDER_FPS) so playback
+        # timing is right. Only used when process_config.render is True.
+        renderer=RLViserRenderer(
+            tick_rate=float(os.environ.get("RL_RENDER_FPS", "60"))
+        ),
     )
 
 
@@ -206,8 +211,26 @@ if __name__ == "__main__":
     # Set RL_RENDER=1 to watch env process 0 in the RLViser window (needs a
     # local display; not over SSH or inside Docker).
     render = os.environ.get("RL_RENDER", "0") == "1"
-    # ~real-time playback: one env step advances action_repeat (8) / 120 s of game time.
-    render_delay = 8 / 120 if render else None
+    # RL_RENDER_FPS: frames/sec streamed to rlviser (default 60). One env step
+    # advances action_repeat (8) / 120 s of game time, so on-screen playback
+    # runs at RL_RENDER_FPS / 15 x real time (15 -> real time, 60 -> 4x). Higher
+    # looks smoother but only up to what env process 0 can actually produce, so
+    # watch with RL_N_PROC=1 (or 2) - the render loop competes with every other
+    # env process and the learner for CPU. rlviser interpolates between frames,
+    # so a *steady* feed matters more than a high number; it also has a live
+    # game-speed control and reads fps_limit / vsync from its settings.txt.
+    render_fps = float(os.environ.get("RL_RENDER_FPS", "60"))
+    render_delay = (1.0 / render_fps) if render else None
+    if render:
+        print(
+            f"[quick_start] rendering env 0 at up to {render_fps:g} fps "
+            f"(~{render_fps / 15:.1f}x real time); RL_RENDER_FPS=15 for real time"
+        )
+        if n_proc > 2:
+            print(
+                f"[quick_start] RL_N_PROC={n_proc}: playback will be smoother "
+                f"with RL_N_PROC=1 while watching"
+            )
 
     # wandb logging is ON by default. Run `wandb login` once (or export
     # WANDB_API_KEY), or set WANDB_MODE=offline to log locally with no account.
