@@ -1,4 +1,6 @@
-# rocket-league-bot
+# PILOT
+
+**P**roximal-**I**teration **L**earning **O**ver **T**ime
 
 RL bot for Rocket League. [RLGym v2](https://rlgym.org/) +
 [RocketSim](https://github.com/ZealanL/RocketSim) for the env,
@@ -95,7 +97,9 @@ WSL2 Ubuntu shell.
    hammers the disk and `/mnt/c` is ~10x slower.
 
    ```sh
-   cd ~ && git clone <your-repo-url> rocket-league-bot && cd rocket-league-bot
+   cd ~
+   git clone https://github.com/CPollreis/rocket-league-bot.git
+   cd rocket-league-bot
    ```
 
 Then do [Setup](#setup) in that same shell.
