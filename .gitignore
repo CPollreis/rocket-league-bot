@@ -1,9 +1,17 @@
 .venv/
 __pycache__/
+.claude/
 
 # local copy of the rlviser viewer binary, for RL_RENDER=1 (see README)
 rlviser
 rlviser.exe
+rlviser.disabled
+# custom from-source Windows build with the WSAECONNRESET fix (see
+# scripts/launch_rlviser_windows.ps1) -- plus its dynamic_linking-feature
+# side-car DLLs, which must ship next to it
+rlviser_windows_fixed.exe
+bevy_dylib-*.dll
+std-*.dll
 
 # rlviser writes its own settings file into the working directory
 settings.txt
